@@ -11,12 +11,30 @@ cdef int clip(int a, int min_value, int max_value):
     return min(max(a, min_value), max_value)
 
 
-def compute(array_1, array_2, int a, int b, int c):
+def compute(int[:, :] array_1, int [:, :] array_2, int a, int b, int c):
+    cdef Py_ssize_t x_max = array_1.shape[0]
+    cdef Py_ssize_t y_max = array_1.shape[1]
 
-    # The "cdef" keyword is also used within functions to type variables. It
-    # can only be used at the top indentation level (there are non-trivial
-    # problems with allowing them in other places, though we'd love to see
-    # good and thought out proposals for it).
+    assert tuple(array_1.shape) == tuple(array_2.shape)
+    # assert array_1.dtype == DTYPE
+    # assert array_2.dtype == DTYPE
+
+    result = np.zeros((x_max, y_max), dtype=DTYPE)
+    cdef:
+        int[:, :] rv = result
+        int tmp
+        Py_ssize_t x, y  # Py_ssize_t is the proper C type for Python array indices.
+
+    for x in range(x_max):
+        for y in range(y_max):
+            tmp = clip(array_1[x, y], 2, 10)
+            tmp = tmp * a + array_2[x, y] * b
+            rv[x, y] = tmp + c
+
+    return result
+
+
+def compute2(array_1, array_2, int a, int b, int c):
     cdef Py_ssize_t x_max = array_1.shape[0]
     cdef Py_ssize_t y_max = array_1.shape[1]
 
@@ -25,15 +43,6 @@ def compute(array_1, array_2, int a, int b, int c):
     assert array_2.dtype == DTYPE
 
     result = np.zeros((x_max, y_max), dtype=DTYPE)
-
-    # It is very important to type ALL your variables. You do not get any
-    # warnings if not, only much slower code (they are implicitly typed as
-    # Python objects).
-    # For the "tmp" variable, we want to use the same data type as is
-    # stored in the array, so we use int because it correspond to np.intc.
-    # NB! An important side-effect of this is that if "tmp" overflows its
-    # datatype size, it will simply wrap around like in C, rather than raise
-    # an error like in Python.
 
     cdef int tmp
 

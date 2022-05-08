@@ -1,5 +1,3 @@
-import time
-from contextlib import contextmanager
 from typing import Dict
 
 import integrate
@@ -13,14 +11,6 @@ class MyF(Fun):
 class MyG(Fun):
     def eval(self, x):
         return sin(x ** 2)
-
-@contextmanager
-def timeit(msg):
-    t0 = time.time()
-    yield
-    dt = time.time() - t0
-    print(msg, f'used {dt:.2f} s')
-
 
 class BenchmarkInt:
     def __init__(self, fmap: Dict[str, Fun], g):
